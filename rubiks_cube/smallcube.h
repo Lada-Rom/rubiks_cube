@@ -73,10 +73,7 @@ public:
 		1, 1, 0,   1, 1, 0,   1, 1, 0,   1, 1, 0, //желтая вершина
 		1, 0.5, 0, 1, 0.5, 0,   1, 0.5, 0,   1, 0.5, 0  //оранжевая вершина
 		};
-		static float alpha = 0;
-		//attempt to rotate cube
-		glRotatef(alpha, 0, 1, 0);
-
+		
 		/* We have a color array and a vertex array */
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
@@ -89,7 +86,6 @@ public:
 		/* Cleanup states */
 		glDisableClientState(GL_COLOR_ARRAY);
 		glDisableClientState(GL_VERTEX_ARRAY);
-		//alpha += 0.5;
 	}
 	float posx()
 	{
