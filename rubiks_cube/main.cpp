@@ -3,10 +3,11 @@
 // Make MS math.h define M_PI
 #define _USE_MATH_DEFINES
 #endif
-#include <glew.h>
-#include "C:\Users\Michelle\source\repos\CUBORUBO\CUBORUBO\smallcube.h"
 #include "cube.h"
-#include <glfw3.h>
+#include "smallcube.h"
+
+#include <glew/glew.h>
+#include <glfw/glfw3.h>
 
 
 #include <glm/glm.hpp>
@@ -15,7 +16,6 @@
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <gl.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,6 @@
 #include <cstdio>
 #include <iostream>
 #include <cmath>
-#include <windows.h>
 
 #define MAX_DELTA_T 0.01
 

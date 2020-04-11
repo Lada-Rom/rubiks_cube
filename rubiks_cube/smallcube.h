@@ -1,9 +1,9 @@
 #pragma once
 #ifndef __SMALLCUBE_H__
 #define GLEW_STATIC
-#include <glew.h>
-#include <glfw3.h>
-#include<cstring>
+#include <glew/glew.h>
+#include <glfw/glfw3.h>
+#include <cstring>
 #include <glm\fwd.hpp>
 
 class SmallCube
