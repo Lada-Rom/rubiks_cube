@@ -282,9 +282,6 @@ void draw_scene(GLFWwindow* window)
 	glRotatef(beta, 1.0, 0.0, 0.0);
 	glRotatef(alpha, 0.0, 0.0, 1.0);
 
-	glDrawElements(GL_QUADS, 4 * QUADNUM, GL_UNSIGNED_INT, quad);
-
-	glfwSwapBuffers(window);
 }
 
 int main(int argc, char** argv)
@@ -349,18 +346,14 @@ int main(int argc, char** argv)
 			}
 
 			// Draw stuff
+			
 			glClearColor(0.0, 0.8, 0.3, 1.0);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			glMatrixMode(GL_PROJECTION_MATRIX);
-			glLoadIdentity();
-			perspectiveGL(60, (double)windowWidth / (double)windowHeight, 0.1, 100);
-
-			glMatrixMode(GL_MODELVIEW_MATRIX);
-			glTranslatef(0, 0, -5);
-
 			draw_scene(window);
 			a.Draw();
+
+			
 
 			// Update Screen
 			glfwSwapBuffers(window);
