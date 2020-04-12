@@ -31,8 +31,10 @@
 // Animation speed (10.0 looks good)
 #define ANIMATION_SPEED 10.0
 
-GLfloat alpha = 210.f, beta = -70.f;
+GLfloat alpha = 180.f, beta = 180.f;
 GLfloat zoom = 2.f;
+
+Cube a;
 
 double cursorX;
 double cursorY;
@@ -133,8 +135,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 		break;
 	case GLFW_KEY_SPACE:
-		init_grid();
+	{
+		static bool done = false;
+		if (!done && action == GLFW_PRESS)
+		{
+			done = true;
+			a.Rotatebelt(1, 1); // одноразово делаешь что нужно
+		}
 		break;
+	}
 	case GLFW_KEY_LEFT:
 		alpha += 5;
 		break;
@@ -281,6 +290,7 @@ void draw_scene(GLFWwindow* window)
 	// Rotate the view
 	glRotatef(beta, 1.0, 0.0, 0.0);
 	glRotatef(alpha, 0.0, 0.0, 1.0);
+	glRotatef(0, 0.0, 1.0, 0.0);
 
 }
 
@@ -320,7 +330,6 @@ int main(int argc, char** argv)
 
 	SmallCube cube1;
 	SmallCube cube2;
-	Cube a;
 
 	t_old = glfwGetTime() - 0.01;
 		while (!glfwWindowShouldClose(window))
@@ -351,6 +360,7 @@ int main(int argc, char** argv)
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			draw_scene(window);
+			a.updatebelt();
 			a.Draw();
 
 			

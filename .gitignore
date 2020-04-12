@@ -30,3 +30,4 @@ _ReSharper*/
 .vs/
 #Nuget packages folder
 packages/
+/rubiks_cube/rubiks_cube.vcxproj
