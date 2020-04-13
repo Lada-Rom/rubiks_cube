@@ -1,380 +1,127 @@
-#define GLEW_STATIC
-#if defined(_MSC_VER)
-// Make MS math.h define M_PI
-#define _USE_MATH_DEFINES
-#endif
 #include "cube.h"
-#include "smallcube.h"
-
+#include "shader.h"
 #include <glew/glew.h>
 #include <glfw/glfw3.h>
-
-
-#include <glm/glm.hpp>
-#include <glm/vec3.hpp> // glm::vec3
-#include <glm/vec4.hpp> // glm::vec4
-#include <glm/mat4x4.hpp> // glm::mat4
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include <linmath.h>
-#include <cstdio>
 #include <iostream>
-#include <cmath>
 
-#define MAX_DELTA_T 0.01
+static GLFWwindow* window = nullptr;
+static int width = 0;
+static int height{ 0 };
 
-// Animation speed (10.0 looks good)
-#define ANIMATION_SPEED 10.0
+glm::mat4 proj; // матрица перспективной проекции
+glm::mat4 view; // матрица вида
 
-GLfloat alpha = 180.f, beta = 180.f;
-GLfloat zoom = 2.f;
+bool ready{ false };
 
-Cube a;
+static Cubes obj;
 
-double cursorX;
-double cursorY;
-
-#define GRIDW 50
-#define GRIDH 50
-#define VERTEXNUM (GRIDW*GRIDH)
-
-#define QUADW (GRIDW - 1)
-#define QUADH (GRIDH - 1)
-#define QUADNUM (QUADW*QUADH)
-
-GLuint quad[4 * QUADNUM];
-using namespace std;
-
-double dt;
-double p[GRIDW][GRIDH];
-double vx[GRIDW][GRIDH], vy[GRIDW][GRIDH];
-double ax[GRIDW][GRIDH], ay[GRIDW][GRIDH];
-
-
-void init_grid(void)
+static void key_cb(GLFWwindow*, int key, int, int action, int)
 {
-	int x, y;
-	double dx, dy, d;
-
-	for (y = 0; y < GRIDH; y++)
-	{
-		for (x = 0; x < GRIDW; x++)
-		{
-			dx = (double)(x - GRIDW / 2);
-			dy = (double)(y - GRIDH / 2);
-			d = sqrt(dx * dx + dy * dy);
-			if (d < 0.1 * (double)(GRIDW / 2))
-			{
-				d = d * 10.0;
-				p[x][y] = -cos(d * (3.14 / (double)(GRIDW * 4))) * 100.0;
-			}
-			else
-				p[x][y] = 0.0;
-
-			vx[x][y] = 0.0;
-			vy[x][y] = 0.0;
-		}
-	}
-}
-
-void calc_grid(void)
-{
-	int x, y, x2, y2;
-	double time_step = dt * ANIMATION_SPEED;
-
-	// Compute accelerations
-	for (x = 0; x < GRIDW; x++)
-	{
-		x2 = (x + 1) % GRIDW;
-		for (y = 0; y < GRIDH; y++)
-			ax[x][y] = p[x][y] - p[x2][y];
-	}
-
-	for (y = 0; y < GRIDH; y++)
-	{
-		y2 = (y + 1) % GRIDH;
-		for (x = 0; x < GRIDW; x++)
-			ay[x][y] = p[x][y] - p[x][y2];
-	}
-
-	// Compute speeds
-	for (x = 0; x < GRIDW; x++)
-	{
-		for (y = 0; y < GRIDH; y++)
-		{
-			vx[x][y] = vx[x][y] + ax[x][y] * time_step;
-			vy[x][y] = vy[x][y] + ay[x][y] * time_step;
-		}
-	}
-
-	// Compute pressure
-	for (x = 1; x < GRIDW; x++)
-	{
-		x2 = x - 1;
-		for (y = 1; y < GRIDH; y++)
-		{
-			y2 = y - 1;
-			p[x][y] = p[x][y] + (vx[x2][y] - vx[x][y] + vy[x][y2] - vy[x][y]) * time_step;
-		}
-	}
-}
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (action != GLFW_PRESS)
-		return;
-
+	if (action != GLFW_PRESS) return;
+	static int belt = 0;
 	switch (key)
 	{
-	case GLFW_KEY_ESCAPE:
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	case GLFW_KEY_Q:    // против часовой вокруг оси z
+		obj.rotate_belt(belt, 1, 2);
 		break;
-	case GLFW_KEY_SPACE:
+	case GLFW_KEY_E:    // по часовой вокруг оси z
+		obj.rotate_belt(belt, -1, 2);
+		break;
+	case GLFW_KEY_A:    // по часовой вокруг оси y
+		obj.rotate_belt(belt, -1, 1);
+		break;
+	case GLFW_KEY_D:    // против часовой вокруг оси y
+		obj.rotate_belt(belt, 1, 1);
+		break;
+	case GLFW_KEY_W:    // по часовой вокруг оси x
+		obj.rotate_belt(belt, -1, 0);
+		break;
+	case GLFW_KEY_S:    // против часовой вокруг оси x
+		obj.rotate_belt(belt, 1, 0);
+		break;
+	case GLFW_KEY_KP_1: // выбираем ближний пояс
+		belt = 0;
+		break;
+	case GLFW_KEY_KP_2: // выбираем средний пояс
+		belt = 1;
+		break;
+	case GLFW_KEY_KP_3: // выбираем дальний пояс
+		belt = 2;
+		break;
+	}
+}
+
+bool init()
+{
+	if (ready) return ready;
+	if (!glfwInit())
 	{
-		static bool done = false;
-		if (!done && action == GLFW_PRESS)
-		{
-			done = true;
-			a.Rotatebelt(1, 1); // одноразово делаешь что нужно
-		}
-		break;
-	}
-	case GLFW_KEY_LEFT:
-		alpha += 5;
-		break;
-	case GLFW_KEY_RIGHT:
-		alpha -= 5;
-		break;
-	case GLFW_KEY_UP:
-		beta -= 5;
-		break;
-	case GLFW_KEY_DOWN:
-		beta += 5;
-		break;
-	case GLFW_KEY_PAGE_UP:
-		zoom -= 0.25f;
-		if (zoom < 0.f)
-			zoom = 0.f;
-		break;
-	case GLFW_KEY_PAGE_DOWN:
-		zoom += 0.25f;
-		break;
-	default:
-		break;
-	}
-}
+		std::cout << "Failed to initialize GLFW" << std::endl;
+		glfwTerminate();
+		return false;
+	};
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-
-//========================================================================
-// Callback function for mouse button events
-//========================================================================
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-	if (button != GLFW_MOUSE_BUTTON_LEFT)
-		return;
-
-	if (action == GLFW_PRESS)
+	window = glfwCreateWindow(800, 600, "TestOpenGL", nullptr, nullptr);
+	if (window == nullptr)
 	{
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		glfwGetCursorPos(window, &cursorX, &cursorY);
+		std::cout << "Failed to create GLFW window" << std::endl;
+		glfwTerminate();
+		return false;
 	}
-	else
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-}
-
-
-//========================================================================
-// Callback function for cursor motion events
-//========================================================================
-
-void cursor_position_callback(GLFWwindow* window, double x, double y)
-{
-	if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED)
-	{
-		alpha += (GLfloat)(x - cursorX) / 10.f;
-		beta += (GLfloat)(y - cursorY) / 10.f;
-
-		cursorX = x;
-		cursorY = y;
-	}
-}
-
-
-//========================================================================
-// Callback function for scroll events
-//========================================================================
-
-void scroll_callback(GLFWwindow* window, double x, double y)
-{
-	zoom += (float)y / 4.f;
-	if (zoom < 0)
-		zoom = 0;
-}
-
-
-//========================================================================
-// Callback function for framebuffer resize events
-//========================================================================
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-	float ratio = 1.f;
-	mat4x4 projection;
-
-	if (height > 0)
-		ratio = (float)width / (float)height;
-
-	// Setup viewport
-	glViewport(0, 0, width, height);
-
-	// Change to the projection matrix and set our viewing volume
-	glMatrixMode(GL_PROJECTION);
-	mat4x4_perspective(projection,
-		60.f * (float)M_PI / 180.f,
-		ratio,
-		1.f, 1024.f);
-	glLoadMatrixf((const GLfloat*)projection);
-}
-
-void perspectiveGL(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar)
-{
-	const GLdouble pi = 3.1415926535897932384626433832795;
-	GLdouble fW, fH;
-
-	//fH = tan( (fovY / 2) / 180 * pi ) * zNear;
-	fH = tan(fovY / 360 * pi) * zNear;
-	fW = fH * aspect;
-
-	glFrustum(-fW, fW, -fH, fH, zNear, zFar);
-}
-
-
-GLFWwindow* initWindow(const int resX, const int resY)
-{
-	glfwWindowHint(GLFW_SAMPLES, 4); // НЕ ЗНАЮ ЧТО ЭТО
-	GLFWwindow* window = glfwCreateWindow(800, 600, "CubeRube", nullptr, nullptr);
 
 	glfwMakeContextCurrent(window);
+	glfwSetKeyCallback(window, key_cb);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	// Get info of GPU and supported OpenGL version
-	printf("Renderer: %s\n", glGetString(GL_RENDERER));
-	printf("OpenGL version supported %s\n", glGetString(GL_VERSION));
-
-	glEnable(GL_DEPTH_TEST); // Depth Testing
-	glDepthFunc(GL_LEQUAL);
-	glDisable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
-	return window;
-}
-
-
-void draw_scene(GLFWwindow* window)
-{
-	// Clear the color and depth buffers
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// We don't want to modify the projection matrix
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	// Move back
-	glTranslatef(0.0, 0.0, -zoom);
-	// Rotate the view
-	glRotatef(beta, 1.0, 0.0, 0.0);
-	glRotatef(alpha, 0.0, 0.0, 1.0);
-	glRotatef(0, 0.0, 1.0, 0.0);
-
-}
-
-int main(int argc, char** argv)
-{	
-	double t, dt_total, t_old;
-	int width, height;
-	if (!glfwInit())//Инициализация GLFW
-	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		return NULL;
-	}
 	glewExperimental = GL_TRUE;
-	if (!glewInit())//Инициализация GLFW
+	if (glewInit() != GLEW_OK)
 	{
-		fprintf(stderr, "Failed to initialize GLFW\n");
-		return NULL;
-	} //Иниализация GLEW для управления указателями GL
-	glEnable(GL_DEPTH_TEST);
+		std::cout << "Failed to initialize GLEW" << std::endl;
+		glfwTerminate();
+		return false;
+	}
 
-
-
-	GLFWwindow* window = initWindow(1024, 620);
-
-	glfwSetKeyCallback(window, key_callback);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-	glfwSetMouseButtonCallback(window, mouse_button_callback);
-	glfwSetCursorPosCallback(window, cursor_position_callback);
-	glfwSetScrollCallback(window, scroll_callback);
-
-	//gladLoadGL(glfwGetProcAddress);
 	glfwSwapInterval(1);
-
 	glfwGetFramebufferSize(window, &width, &height);
-	framebuffer_size_callback(window, width, height);
+	glViewport(0, 0, width, height);
 
+	proj = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 1000.0f);
+	view = glm::lookAt(glm::vec3{ 10, 10, 20 }, glm::vec3{ 0,0,0 }, glm::vec3{ 0,1,0 });
+	obj.init();
 
-	SmallCube cube1;
-	SmallCube cube2;
+	return ready = true;
+}
 
-	t_old = glfwGetTime() - 0.01;
+	int run()
+	{
+		if (!init()) return -1;
+
+		glClearColor(0.2f, 0.5f, 0.8f, 1.0f);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+
+		auto shader = create_program(vertex_shader_str, fragment_shader_str);
+		glfwSetTime(0);
+
 		while (!glfwWindowShouldClose(window))
 		{
-
-			// Scale to window size
-			GLint windowWidth, windowHeight;
-			glfwGetWindowSize(window, &windowWidth, &windowHeight);
-			glViewport(0, 0, windowWidth, windowHeight);
-
-			t = glfwGetTime();
-			dt_total = t - t_old;
-			t_old = t;
-
-			// Safety - iterate if dt_total is too large
-			while (dt_total > 0.f)
-			{
-				// Select iteration time step
-				dt = dt_total > MAX_DELTA_T ? MAX_DELTA_T : dt_total;
-				dt_total -= dt;
-
-				calc_grid();
-			}
-
-			// Draw stuff
-			
-			glClearColor(0.0, 0.8, 0.3, 1.0);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			draw_scene(window);
-			a.updatebelt();
-			a.Draw();
-
-			
-
-			// Update Screen
-			glfwSwapBuffers(window);
-
-
-			// Check for any input, or window movement
+			obj.update(float(glfwGetTime()));
+			glfwSetTime(0);
 			glfwPollEvents();
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			obj.draw(shader, proj, view);
+			glfwSwapBuffers(window);
 		}
 
-		glfwDestroyWindow(window);
-		glfwTerminate(); //очистка ресурсов
-		return 0;	
-}
+		glDeleteProgram(shader);
+		return 0;
+	}
 
+	
+
+int main()
+{
+		return run();;
+}

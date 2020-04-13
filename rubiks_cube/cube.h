@@ -1,179 +1,253 @@
 #pragma once
-#ifndef _CUBE_H_
-#define _CUBE_H_
-#include "smallcube.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#ifndef ____CUBE2_H_______
+
 #include <vector>
-#include <string>
+#include <glew/glew.h>
+#include <glfw/glfw3.h>
+#include "transform.h"
 
-class Cube
-{
-public:
-	Cube()
-	{
-		cubiks[0][2][0].setposition(-1, -1, -1);
-		cubiks[0][2][1].setposition(-0.49f, -1.f, -1.f);
-		cubiks[0][2][2].setposition(0.02, -1, -1);
-
-		cubiks[0][1][0].setposition(-1, -0.47, -1);
-		cubiks[0][1][1].setposition(-0.49, -0.47, -1);
-		cubiks[0][1][2].setposition(0.02, -0.47, -1);
-
-		cubiks[0][0][0].setposition(-1, 0.07, -1);
-		cubiks[0][0][1].setposition(-0.49, 0.07, -1);
-		cubiks[0][0][2].setposition(0.02, 0.07, -1);
-		//---------------нижний---------------------
-
-
-		//--------------середина--------------------
-		cubiks[1][0][0].setposition(-1, -1, -0.45);
-		cubiks[1][1][0].setposition(-0.49, -1, -0.45);
-		cubiks[1][2][0].setposition(0.02, -1, -0.45);
-
-		cubiks[1][0][1].setposition(-1, -0.47, -0.45);
-		cubiks[1][1][1].setposition(-0.49, -0.47, -0.45);
-		cubiks[1][2][1].setposition(0.02, -0.47, -0.45);
-
-		cubiks[1][0][2].setposition(-1, 0.07, -0.45);
-		cubiks[1][1][2].setposition(-0.49, 0.07, -0.45);
-		cubiks[1][2][2].setposition(0.02, 0.07, -0.45);
-		//----------------середина----------------------------
-
-
-		//------------------верх-------------------------------
-		cubiks[2][0][0].setposition(-1, -1, 0.08);
-		cubiks[2][1][0].setposition(-0.49, -1, 0.08);
-		cubiks[2][2][0].setposition(0.02, -1, 0.08);
-
-		cubiks[2][0][1].setposition(-1, -0.47, 0.08);
-		cubiks[2][1][1].setposition(-0.49, -0.47, 0.08);
-		cubiks[2][2][1].setposition(0.02, -0.47, 0.08);
-
-		cubiks[2][0][2].setposition(-1, 0.07, 0.08);
-		cubiks[2][1][2].setposition(-0.49, 0.07, 0.08);
-		cubiks[2][2][2].setposition(0.02, 0.07, 0.08);
-	}
-	void updatebelt()
-	{
-		if (!rotationstatus)
-		{
-			//смотрим по координатам к какой плоскости принадлежит кубик маленький и на основе этого даем ему номер пояса,не будет работать во время ротации потому что координаты меняются
-			for (int i(0); i < 3; i++)
-			{
-				for (int j(0); j < 3; j++)
-				{
-					for (int k(0); k < 3; k++)
-					{
-						if (( -1.1f < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < -0.9f) && (-1.1f < cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < 0.1f ) && cubiks[i][j][k].getvbelt() != 1)
-						{
-							cubiks[i][j][k].setverticalbelt(1);
-						}
-						if (( -0.46f < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < -0.44f) && (-1.1f < cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < 0.1f) && cubiks[i][j][k].getvbelt() != 2)
-						{
-							cubiks[i][j][k].setverticalbelt(2);
-						}
-						if ((0.06  < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < 0.1) && (-1.1f <= cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < 0.1f) && cubiks[i][j][k].getvbelt() != 3)
-						{
-							cubiks[i][j][k].setverticalbelt(3);
-						}
-						if ((-1.1 < cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < -0.9f) &&(-1.1f < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < 0.1f) && cubiks[i][j][k].gethbelt() != 4)
-						{
-							cubiks[i][j][k].sethorizontalbelt(4);
-						}
-						if (( -0.49f < cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < -0.45f) && (-1.1f < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < 0.1f) && cubiks[i][j][k].gethbelt() != 5)
-						{
-							cubiks[i][j][k].sethorizontalbelt(5);
-						}
-						if ((0.05f < cubiks[i][j][k].posy() && cubiks[i][j][k].posy() < 0.1f) && (-1.1f < cubiks[i][j][k].posz() && cubiks[i][j][k].posz() < 0.1f) && cubiks[i][j][k].gethbelt() != 6)
-						{
-							cubiks[i][j][k].sethorizontalbelt(6);
-						}
-					}
-				}
-			}
-		}
-	}
-	void Rotatebelt(int n, int angle)
-	{
-		rotx = glm::rotate(rotx, 90.f, glm::vec3(1.0, 0.0, 0.0));
-		roty = glm::rotate(rotx, angle * 90.f, glm::vec3(0.0, 1.0, 0.0));
-		rotz = glm::rotate(rotx, angle * (GLfloat)glfwGetTime() * 50.0f, glm::vec3(0.0, 1.0, 1.0));
-		rotationstatus = true;
-		if (n == 1)
-		{
-			for (int i(0); i < 3; i++)
-			{
-				for (int j(0); j < 3; j++)
-				{
-					for (int k(0); k < 3; k++)
-					{
-						if (cubiks[i][j][k].getvbelt() == 1)
-						{
-							roty = glm::rotate(roty, glm::radians(angle*90.f), glm::vec3(0.0, 1.0, 0.0));
-							glm::vec4 t(cubiks[i][j][k].posx(), cubiks[i][j][k].posy(), cubiks[i][j][k].posz(),1);
-							t = roty * t;
-							cubiks[i][j][k].setposition(t.x,t.y,t.z);
-						}
-					}
-				}
-			}
-		}
-		rotationstatus = false;
-	}
-	void Draw()
-	{
-		//-----------------фасад
-		cubiks[0][2][0].drawsmallcube(cubiks[0][2][0].posx(), cubiks[0][2][0].posy(), cubiks[0][2][0].posz());
-		cubiks[0][2][1].drawsmallcube(cubiks[0][2][1].posx(), cubiks[0][2][1].posy(), cubiks[0][2][1].posz());
-		cubiks[0][2][2].drawsmallcube(cubiks[0][2][2].posx(), cubiks[0][2][2].posy(), cubiks[0][2][2].posz());
-
-		cubiks[0][1][0].drawsmallcube(cubiks[0][1][0].posx(), cubiks[0][1][0].posy(), cubiks[0][1][0].posz());
-		cubiks[0][1][1].drawsmallcube(cubiks[0][1][1].posx(), cubiks[0][1][1].posy(), cubiks[0][1][1].posz());
-		cubiks[0][1][2].drawsmallcube(cubiks[0][1][2].posx(), cubiks[0][1][2].posy(), cubiks[0][1][2].posz());
-
-		cubiks[0][0][0].drawsmallcube(cubiks[0][0][0].posx(), cubiks[0][0][0].posy(), cubiks[0][0][0].posz());
-		cubiks[0][0][1].drawsmallcube(cubiks[0][0][1].posx(), cubiks[0][0][1].posy(), cubiks[0][0][1].posz());
-		cubiks[0][0][2].drawsmallcube(cubiks[0][0][2].posx(), cubiks[0][0][2].posy(), cubiks[0][0][2].posz());
-		//фасад
-
-
-		//--------------середина--------------------
-		cubiks[1][0][0].drawsmallcube(cubiks[1][0][0].posx(), cubiks[1][0][0].posy(), cubiks[1][0][0].posz());
-		cubiks[1][1][0].drawsmallcube(cubiks[1][1][0].posx(), cubiks[1][1][0].posy(), cubiks[1][1][0].posz());
-		cubiks[1][2][0].drawsmallcube(cubiks[1][2][0].posx(), cubiks[1][2][0].posy(), cubiks[1][2][0].posz());
-
-		cubiks[1][0][1].drawsmallcube(cubiks[1][0][1].posx(), cubiks[1][0][1].posy(), cubiks[1][0][1].posz());
-		cubiks[1][1][1].drawsmallcube(cubiks[1][1][1].posx(), cubiks[1][1][1].posy(), cubiks[1][1][1].posz());
-		cubiks[1][2][1].drawsmallcube(cubiks[1][2][1].posx(), cubiks[1][2][1].posy(), cubiks[1][2][1].posz());
-
-		cubiks[1][0][2].drawsmallcube(cubiks[1][0][2].posx(), cubiks[1][0][2].posy(), cubiks[1][0][2].posz());
-		cubiks[1][1][2].drawsmallcube(cubiks[1][1][2].posx(), cubiks[1][1][2].posy(), cubiks[1][1][2].posz());
-		cubiks[1][2][2].drawsmallcube(cubiks[1][2][2].posx(), cubiks[1][2][2].posy(), cubiks[1][2][2].posz());
-		//----------------середина----------------------------
-
-
-		//--------------------зад------------------------
-		cubiks[2][0][0].drawsmallcube(cubiks[2][0][0].posx(), cubiks[2][0][0].posy(), cubiks[2][0][0].posz());
-		cubiks[2][1][0].drawsmallcube(cubiks[2][1][0].posx(), cubiks[2][1][0].posy(), cubiks[2][1][0].posz());
-		cubiks[2][2][0].drawsmallcube(cubiks[2][2][0].posx(), cubiks[2][2][0].posy(), cubiks[2][2][0].posz());
-
-		cubiks[2][0][1].drawsmallcube(cubiks[2][0][1].posx(), cubiks[2][0][1].posy(), cubiks[2][0][1].posz());
-		cubiks[2][1][1].drawsmallcube(cubiks[2][1][1].posx(), cubiks[2][1][1].posy(), cubiks[2][1][1].posz());
-		cubiks[2][2][1].drawsmallcube(cubiks[2][2][1].posx(), cubiks[2][2][1].posy(), cubiks[2][2][1].posz());
-
-		cubiks[2][0][2].drawsmallcube(cubiks[2][0][2].posx(), cubiks[2][0][2].posy(), cubiks[2][0][2].posz());
-		cubiks[2][1][2].drawsmallcube(cubiks[2][1][2].posx(), cubiks[2][1][2].posy(), cubiks[2][1][2].posz());
-		cubiks[2][2][2].drawsmallcube(cubiks[2][2][2].posx(), cubiks[2][2][2].posy(), cubiks[2][2][2].posz());
-		//------------------зад--------------------------------
-	}
-private:
-	SmallCube cubiks[3][3][3];
-	glm::mat4 rotx = glm::mat4(1.0);
-	glm::mat4 rotz = glm::mat4(1.0);
-	glm::mat4 roty = glm::mat4(1.0);
-	bool rotationstatus;
+struct vertex
+{   // вершина
+	glm::vec3 pos;
+	glm::vec3 col;
 };
 
-#endif // !_CUBE_H_
+class Cubes // кубик рубик
+{
+public:
+
+	// инициализация
+	void init()
+	{
+		/**********************
+		 *     7--------6
+		 *    /|       /|
+		 *   / |      / |
+		 *  3--------2  |
+		 *  |  |     |  |
+		 *  |  4-----|--5
+		 *  | /      | /
+		 *  |/       |/
+		 *  0--------1
+		 **********************/
+		vertex data[]   // вершины модели
+		{   //  позиция              |       цвет
+			// 0, 1, 2
+			{{-1.0f, -1.0f, 1.0f},      {1.0f, 0.0f, 0.0f}},
+			{{1.0f, -1.0f, 1.0f},       {1.0f, 0.0f, 0.0f}},
+			{{1.0f, 1.0f, 1.0f},        {1.0f, 0.0f, 0.0f}},
+			// 0, 2, 3
+			{{-1.0f, -1.0f, 1.0f},      {1.0f, 0.0f, 0.0f}},
+			{{1.0f, 1.0f, 1.0f},        {1.0f, 0.0f, 0.0f}},
+			{{-1.0f, 1.0f, 1.0f},       {1.0f, 0.0f, 0.0f}},
+			// 1, 5, 6
+			{{1.0f, -1.0f, 1.0f},       {1.0f, 1.0f, 0.0f}},
+			{{1.0f, -1.0f, -1.0f},      {1.0f, 1.0f, 0.0f}},
+			{{1.0f, 1.0f, -1.0f},       {1.0f, 1.0f, 0.0f}},
+			// 1, 6, 2
+			{{1.0f, -1.0f, 1.0f},       {1.0f, 1.0f, 0.0f}},
+			{{1.0f, 1.0f, -1.0f},       {1.0f, 1.0f, 0.0f}},
+			{{1.0f, 1.0f, 1.0f},        {1.0f, 1.0f, 0.0f}},
+			// 5, 4, 7
+			{{1.0f, -1.0f, -1.0f},      {0.0f, 1.0f, 0.0f}},
+			{{-1.0f, -1.0f, -1.0f},     {0.0f, 1.0f, 0.0f}},
+			{{-1.0f, 1.0f, -1.0f},      {0.0f, 1.0f, 0.0f}},
+			// 5, 7, 6
+			{{1.0f, -1.0f, -1.0f},      {0.0f, 1.0f, 0.0f}},
+			{{-1.0f, 1.0f, -1.0f},      {0.0f, 1.0f, 0.0f}},
+			{{1.0f, 1.0f, -1.0f},       {0.0f, 1.0f, 0.0f}},
+			// 4, 0, 3
+			{{-1.0f, -1.0f, -1.0f},     {0.0f, 1.0f, 1.0f}},
+			{{-1.0f, -1.0f, 1.0f},      {0.0f, 1.0f, 1.0f}},
+			{{-1.0f, 1.0f, 1.0f},       {0.0f, 1.0f, 1.0f}},
+			// 4, 3, 7
+			{{-1.0f, -1.0f, -1.0f},     {0.0f, 1.0f, 1.0f}},
+			{{-1.0f, 1.0f, 1.0f},       {0.0f, 1.0f, 1.0f}},
+			{{-1.0f, 1.0f, -1.0f},      {0.0f, 1.0f, 1.0f}},
+			// 3, 2, 6
+			{{-1.0f, 1.0f, 1.0f},       {0.0f, 0.0f, 1.0f}},
+			{{1.0f, 1.0f, 1.0f},        {0.0f, 0.0f, 1.0f}},
+			{{1.0f, 1.0f, -1.0f},       {0.0f, 0.0f, 1.0f}},
+			// 3, 6, 7
+			{{-1.0f, 1.0f, 1.0f},       {0.0f, 0.0f, 1.0f}},
+			{{1.0f, 1.0f, -1.0f},       {0.0f, 0.0f, 1.0f}},
+			{{-1.0f, 1.0f, -1.0f},      {0.0f, 0.0f, 1.0f}},
+			// 4, 5, 1
+			{{-1.0f, -1.0f, -1.0f},     {1.0f, 0.0f, 1.0f}},
+			{{1.0f, -1.0f, -1.0f},      {1.0f, 0.0f, 1.0f}},
+			{{1.0f, -1.0f, 1.0f},       {1.0f, 0.0f, 1.0f}},
+			// 4, 1, 0
+			{{-1.0f, -1.0f, -1.0f},     {1.0f, 0.0f, 1.0f}},
+			{{1.0f, -1.0f, 1.0f},       {1.0f, 0.0f, 1.0f}},
+			{{-1.0f, -1.0f, 1.0f},      {1.0f, 0.0f, 1.0f}},
+		};
+
+		// создаём буферы
+		glGenVertexArrays(1, &vao);
+		glGenBuffers(1, &vbo);
+		glGenBuffers(1, &inst_data);
+
+		// инициализируем буфер вершин
+		glBindVertexArray(vao);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, pos));
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), (GLvoid*)offsetof(vertex, col));
+
+		// для instance drawing
+		glVertexAttribDivisor(0, 0);
+		glVertexAttribDivisor(1, 0);
+
+		// инициализируем буфер матриц для инстансов
+		auto matrices = get_inst_data();
+		constexpr size_t sz = sizeof(glm::mat4);
+		constexpr size_t st = sizeof(glm::vec4);
+
+		glBindBuffer(GL_ARRAY_BUFFER, inst_data);
+		glBufferData(GL_ARRAY_BUFFER, sz * matrices.size(), matrices.data(), GL_STREAM_DRAW);
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sz, (GLvoid*)0);
+		glEnableVertexAttribArray(3);
+		glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sz, (GLvoid*)st);
+		glEnableVertexAttribArray(4);
+		glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sz, (GLvoid*)(2 * st));
+		glEnableVertexAttribArray(5);
+		glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sz, (GLvoid*)(3 * st));
+
+		// для instanced drawing
+		glVertexAttribDivisor(2, 1);
+		glVertexAttribDivisor(3, 1);
+		glVertexAttribDivisor(4, 1);
+		glVertexAttribDivisor(5, 1);
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	~Cubes()
+	{
+		glDeleteBuffers(1, &vbo);
+		glDeleteBuffers(1, &inst_data);
+		glDeleteVertexArrays(1, &vao);
+	}
+
+	void draw(GLuint shader, const glm::mat4& proj, const glm::mat4& view)
+	{
+		update_data();  // обновляем матрицы, если нужно
+		glm::mat4 vp = proj * view;    // ViewProjection матрица
+
+		glUseProgram(shader);
+
+		auto u_vp = glGetUniformLocation(shader, "u_vp");
+		glUniformMatrix4fv(u_vp, 1, GL_FALSE, glm::value_ptr(vp));
+
+		// рисуем инстансы
+		glBindVertexArray(vao);
+		glDrawArraysInstanced(GL_TRIANGLES, 0, 36, m_data.size());
+		glBindVertexArray(0);
+	}
+
+	// поворот пояса
+	void rotate_belt(int belt, int angle, int axis)
+	{
+		// belt - 0..2
+		// 0 - ближний (проекция плоскости на ось вращения положительная)
+		// 1 - средний
+		// 2 - дальний
+
+		// angle - -1 или 1 (влево, вправо)
+
+		// axix - 0..2
+		// 0 - ось x
+		// 1 - ось y
+		// 2 - ось z
+		if (need_update) return;
+		static const glm::vec3 ax[3]
+		{
+			{1, 0, 0},
+			{0, 1, 0},
+			{0, 0, 1}
+		};
+
+		constexpr float eps = 0.1f;
+		const float coord = -(belt - 1) * offset;
+		const float an = glm::radians(angle * 90.0f);
+		for (auto&& tr : m_data)
+		{
+			if (std::abs(tr.get_transform()[3][axis] - coord) < eps)
+			{    // если кубик в плоскости пояса
+				tr.rotate(an, ax[axis]);
+			}
+		}
+
+		need_update = true;
+	}
+
+	void update(float dt)
+	{   // обновляем анимацию
+		for (auto&& tr : m_data)
+		{
+			if (tr.update(dt) && !need_update)
+				need_update = true;
+		}
+	}
+
+private:
+
+	static constexpr float offset = 2.1f; // смещение кубиков в пространстве
+
+	std::vector<transform> generate()
+	{   // начальная расстановка кубиков
+		std::vector<transform> result;
+		for (int x{ -1 }; x < 2; ++x)
+		{
+			for (int y{ -1 }; y < 2; ++y)
+			{
+				for (int z{ -1 }; z < 2; ++z)
+				{
+					if (x == 0 && y == 0 && z == 0) continue;
+					result.push_back({});
+					result.back().set_pos({ x * offset, y * offset, z * offset });
+				}
+			}
+		}
+		return result;
+	}
+
+	std::vector<glm::mat4> get_inst_data()
+	{   // копируем матрицы трансформаций, для последующей загрузки в буфер
+		std::vector<glm::mat4> result;
+		result.reserve(m_data.size());
+		for (auto&& tr : m_data)
+			result.push_back(tr.get_transform());
+		return result;
+	}
+
+	void update_data()
+	{   // если нужно, обновляем буфер матриц для инстансов
+		if (need_update)
+		{
+			auto matrices = get_inst_data();
+			constexpr size_t sz = sizeof(glm::mat4);
+
+			glBindBuffer(GL_ARRAY_BUFFER, inst_data);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, sz * matrices.size(), matrices.data());
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			need_update = false;
+		}
+	}
+
+private:
+
+	bool need_update = false;   // флаг обновления буфера матриц для инстансов
+
+	std::vector<transform> m_data = generate(); // вектор объектов кубиков(анимированных трансформаций)
+
+	GLuint vbo; // буфер вершин
+	GLuint vao; // массив атрибутов
+	GLuint inst_data;   // буфер матриц
+};
+#endif // !____CUBE2_H_______
 
