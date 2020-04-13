@@ -1,6 +1,7 @@
 #pragma once
 #ifndef ___SHADER_H___
 
+#define GLEW_STATIC
 #include <glew/glew.h>
 #include <glfw/glfw3.h>
 

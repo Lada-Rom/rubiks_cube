@@ -1,6 +1,7 @@
 #pragma once
 #ifndef ____CUBE2_H_______
 
+#define GLEW_STATIC
 #include <vector>
 #include <glew/glew.h>
 #include <glfw/glfw3.h>
